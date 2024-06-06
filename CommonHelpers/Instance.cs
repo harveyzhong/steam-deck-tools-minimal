@@ -68,27 +68,6 @@ namespace CommonHelpers
             }
         }
 
-        public static bool UseKernelDrivers
-        {
-            get { return useKernelDrivers; }
-            set
-            {
-                if (useKernelDrivers == value)
-                    return;
-
-                useKernelDrivers = value;
-
-                if (value)
-                    Vlv0100.Instance.Open();
-                else
-                    Vlv0100.Instance.Close();
-
-                // CPU requires reading RyzenSMU
-                HardwareComputer.IsCpuEnabled = value;
-                HardwareComputer.Reset();
-            }
-        }
-
         public static Mutex? WaitGlobalMutex(int timeoutMs)
         {
             if (globalLockMutex == null)
@@ -115,44 +94,6 @@ namespace CommonHelpers
             try
             {
                 return func();
-            }
-            finally
-            {
-                mutex.ReleaseMutex();
-            }
-        }
-
-        public static void Open(String title, bool useKernelDrivers, String? runOnce = null, int runOnceTimeout = 100)
-        {
-            if (runOnce is not null)
-            {
-                RunOnce(title, runOnce, runOnceTimeout);
-            }
-
-            var mutex = WaitGlobalMutex(GLOBAL_DEFAULT_TIMEOUT);
-
-            if (mutex is null)
-            {
-                Fatal(title, "Failed to acquire global mutex.");
-                return;
-            }
-
-            try
-            {
-                UseKernelDrivers = useKernelDrivers;
-
-                if (Vlv0100.Instance.IsOpen && !Vlv0100.Instance.IsSupported)
-                {
-                    String message = "";
-                    message += "Current device is not supported.\n";
-                    message += "FirmwareVersion: " + Vlv0100.Instance.FirmwareVersion.ToString("X") + "\n";
-                    message += "BoardID: " + Vlv0100.Instance.BoardID.ToString("X") + "\n";
-                    message += "PDCS: " + Vlv0100.Instance.PDCS.ToString("X") + "\n";
-
-                    Fatal(title, message);
-                }
-
-                HardwareComputer.Open();
             }
             finally
             {
