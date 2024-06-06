@@ -58,10 +58,12 @@ namespace SteamController.Profiles.Predefined
             EmulateMouseOnRStick(c);
             EmulateDPadArrows(c);
 
-            c.Keyboard[VirtualKeyCode.RETURN] = c.Steam.BtnA;
-            c.Keyboard[VirtualKeyCode.BACK] = c.Steam.BtnB;
+			c.Keyboard[VirtualKeyCode.LWIN] = c.Steam.BtnSteam;
+			c.Keyboard[VirtualKeyCode.RETURN] = c.Steam.BtnA;
+            c.Keyboard[VirtualKeyCode.BACK] = c.Steam.BtnX;
+			c.Keyboard[VirtualKeyCode.ESCAPE] = c.Steam.BtnB;
 
-            return Status.Continue;
+			return Status.Continue;
         }
 
         private void EmulateScrollOnLStick(Context c)

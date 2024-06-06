@@ -28,10 +28,10 @@ namespace SteamController.Profiles.Default
                     c.BackToDefault();
                 return Status.Done;
             }
-            else if (c.Steam.BtnOptions.HoldChain(HoldToSwitchDesktop, ShortcutConsumed, ShortcutConsumed))
+            else if (c.Steam.BtnOptions.HoldChain(HoldToSwitchDesktop, ShortcutConsumed, "SwitchToDesktop"))
             {
-                c.RequestEnable = !c.RequestEnable;
-				return Status.Done;
+                c.BackToDefault();
+                return Status.Done;
             }
 
             // Always consume 3 dots
