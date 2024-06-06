@@ -11,9 +11,6 @@ using System.Security;
 using System.Security.Principal;
 using System.Windows.Forms;
 using Microsoft.Win32;
-using Microsoft.Win32.TaskScheduler;
-using Action = Microsoft.Win32.TaskScheduler.Action;
-using Task = Microsoft.Win32.TaskScheduler.Task;
 
 namespace ExternalHelpers
 {
@@ -42,55 +39,26 @@ namespace ExternalHelpers
                 return;
             }
 
-            if (IsAdministrator() && IsTaskServiceConnect)
+
+            try
             {
+                using (RegistryKey registryKey = Registry.CurrentUser.OpenSubKey(RegistryPath))
+                {
+                    string value = (string)registryKey?.GetValue(NameOf);
+
+                    if (value != null)
+                        _startup = value == Application.ExecutablePath;
+                }
+
                 IsAvailable = true;
-
-                Task task = GetTask();
-                if (task != null)
-                {
-                    foreach (Action action in task.Definition.Actions)
-                    {
-                        if (action.ActionType == TaskActionType.Execute && action is ExecAction execAction)
-                        {
-                            if (execAction.Path.Equals(Application.ExecutablePath, StringComparison.OrdinalIgnoreCase))
-                                _startup = true;
-                        }
-                    }
-                }
             }
-            else
+            catch (SecurityException)
             {
-                try
-                {
-                    using (RegistryKey registryKey = Registry.CurrentUser.OpenSubKey(RegistryPath))
-                    {
-                        string value = (string)registryKey?.GetValue(NameOf);
-
-                        if (value != null)
-                            _startup = value == Application.ExecutablePath;
-                    }
-
-                    IsAvailable = true;
-                }
-                catch (SecurityException)
-                {
-                    IsAvailable = false;
-                }
+                IsAvailable = false;
             }
         }
 
         public bool IsAvailable { get; }
-
-        public bool IsTaskServiceConnect
-        {
-            get
-            {
-                // The likest inner exception is: System.UnauthorizedAccessException
-                try { return TaskService.Instance.Connected; }
-                catch (TypeInitializationException) { return false; }
-            }
-        }
 
         public bool Startup
         {
@@ -101,30 +69,18 @@ namespace ExternalHelpers
                 {
                     if (IsAvailable)
                     {
-                        if (IsTaskServiceConnect)
+                        try
                         {
                             if (value)
-                                CreateTask();
+                                CreateRegistryKey();
                             else
-                                DeleteTask();
+                                DeleteRegistryKey();
 
                             _startup = value;
                         }
-                        else
+                        catch (UnauthorizedAccessException)
                         {
-                            try
-                            {
-                                if (value)
-                                    CreateRegistryKey();
-                                else
-                                    DeleteRegistryKey();
-
-                                _startup = value;
-                            }
-                            catch (UnauthorizedAccessException)
-                            {
-                                throw new InvalidOperationException();
-                            }
+                            throw new InvalidOperationException();
                         }
                     }
                     else
@@ -148,45 +104,6 @@ namespace ExternalHelpers
             {
                 return false;
             }
-        }
-
-        private Task GetTask()
-        {
-            try
-            {
-                return TaskService.Instance.AllTasks.FirstOrDefault(x => x.Name.Equals(NameOf, StringComparison.OrdinalIgnoreCase));
-            }
-            catch
-            {
-                return null;
-            }
-        }
-
-        private void CreateTask()
-        {
-            TaskDefinition taskDefinition = TaskService.Instance.NewTask();
-            taskDefinition.RegistrationInfo.Description = Description;
-
-            taskDefinition.Triggers.Add(new LogonTrigger());
-
-            taskDefinition.Settings.StartWhenAvailable = true;
-            taskDefinition.Settings.DisallowStartIfOnBatteries = false;
-            taskDefinition.Settings.StopIfGoingOnBatteries = false;
-            taskDefinition.Settings.ExecutionTimeLimit = TimeSpan.Zero;
-            taskDefinition.Settings.AllowHardTerminate = false;
-
-            taskDefinition.Principal.RunLevel = TaskRunLevel.Highest;
-            taskDefinition.Principal.LogonType = TaskLogonType.InteractiveToken;
-
-            taskDefinition.Actions.Add(new ExecAction(Application.ExecutablePath, "", Path.GetDirectoryName(Application.ExecutablePath)));
-
-            TaskService.Instance.RootFolder.RegisterTaskDefinition(NameOf, taskDefinition);
-        }
-
-        private void DeleteTask()
-        {
-            Task task = GetTask();
-            task?.Folder.DeleteTask(task.Name, false);
         }
 
         private void CreateRegistryKey()
