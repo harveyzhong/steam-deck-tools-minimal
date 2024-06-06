@@ -16,11 +16,6 @@
   </Target>
 
   <ItemGroup>
-    <PackageReference Include="LibreHardwareMonitorLib" Version="0.9.1" />
-    <PackageReference Include="Sentry" Version="3.24.0" />
-  </ItemGroup>
-
-  <ItemGroup>
     <None Update="LICENSE.md">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>

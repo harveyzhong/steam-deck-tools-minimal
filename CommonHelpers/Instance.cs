@@ -9,14 +9,6 @@ namespace CommonHelpers
 {
     public static class Instance
     {
-        public static LibreHardwareMonitor.Hardware.Computer HardwareComputer = new LibreHardwareMonitor.Hardware.Computer
-        {
-            IsCpuEnabled = true,
-            IsGpuEnabled = true,
-            IsMemoryEnabled = true,
-            IsStorageEnabled = true,
-            IsBatteryEnabled = true
-        };
 
         private static Mutex? runOnceMutex;
         private static Mutex? globalLockMutex;
@@ -115,20 +107,6 @@ namespace CommonHelpers
             catch (AbandonedMutexException)
             {
                 // it is still OK
-            }
-        }
-
-        public static void WithSentry(Action action, string? dsn = null)
-        {
-            // Overwrite DSN
-            if (dsn != null)
-            {
-                Log.SENTRY_DSN = dsn;
-            }
-
-            using (Sentry.SentrySdk.Init(Log.SentryOptions))
-            {
-                action();
             }
         }
 
