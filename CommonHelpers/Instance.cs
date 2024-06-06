@@ -3,6 +3,7 @@ using System.Security.AccessControl;
 using Microsoft.Win32;
 using System.Diagnostics;
 using System.Reflection;
+using System.IO;
 
 namespace CommonHelpers
 {

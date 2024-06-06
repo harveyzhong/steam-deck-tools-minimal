@@ -31,7 +31,6 @@ namespace SteamController
             },
             Managers = {
                 new Managers.ProcessManager(),
-                new Managers.RTSSManager(),
                 new Managers.ProfileSwitcher(),
                 new Managers.SharedDataManager(),
                 new Managers.SASManager()

@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.IO;
 using System.Runtime.InteropServices;
 
 namespace CommonHelpers
@@ -10,19 +11,9 @@ namespace CommonHelpers
             "hidapi.dll"
         };
 
-        public static string[] RTSSShared = new string[]
-        {
-            "RTSSSharedMemoryNET.dll"
-        };
-
         private static string[] VCRuntime = new string[]
         {
             "vcruntime140.dll"
-        };
-
-        private static string[] RTSS = new string[]
-        {
-            "RTSSHooks64.dll"
         };
 
         public static string SDTURL = "https://steam-deck-tools.ayufan.dev";
@@ -33,31 +24,6 @@ namespace CommonHelpers
         {
             ValidateVCRuntime(title);
             ValidateDependency(title, "HidAPI", Hidapi, false);
-        }
-
-        public static void ValidateRTSSSharedMemoryNET(string title)
-        {
-            ValidateVCRuntime(title);
-            ValidateDependency(title, "RTSSSharedMemoryNET", RTSSShared, false);
-        }
-
-        public static bool EnsureRTSS(string? title = null)
-        {
-            string? libraryPath = null;
-
-            try
-            {
-                libraryPath = Microsoft.Win32.Registry.GetValue(
-                    @"HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\Unwinder\RTSS",
-                    "InstallDir",
-                    null
-                ) as string;
-            }
-            catch
-            {
-            }
-
-            return EnsureDependency(title, "Rivatuner Statistics Server", RTSS, libraryPath, RTSSURL, false);
         }
 
         private static void ValidateVCRuntime(string title)
