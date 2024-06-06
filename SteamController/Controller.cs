@@ -31,7 +31,6 @@ namespace SteamController
             },
             Managers = {
                 new Managers.ProcessManager(),
-                new Managers.SteamManager(),
                 new Managers.RTSSManager(),
                 new Managers.ProfileSwitcher(),
                 new Managers.SharedDataManager(),
@@ -48,17 +47,6 @@ namespace SteamController
         {
             Instance.OnUninstall(() =>
             {
-                Helpers.SteamConfiguration.KillSteam();
-                Helpers.SteamConfiguration.WaitForSteamClose(5000);
-                Helpers.SteamConfiguration.BackupSteamConfig();
-
-                var steamControllerUpdate = Helpers.SteamConfiguration.UpdateControllerBlacklist(
-                    Devices.SteamController.VendorID, Devices.SteamController.ProductID, false
-                );
-                var x360ControllerUpdate = Helpers.SteamConfiguration.UpdateControllerBlacklist(
-                    Devices.Xbox360Controller.VendorID, Devices.Xbox360Controller.ProductID, false
-                );
-                Settings.Default.EnableSteamDetection = false;
                 startupManager.Startup = false;
             });
 
@@ -123,11 +111,6 @@ namespace SteamController
 
             contextMenu.Items.Add(new ToolStripSeparator());
 
-            var setupSteamItem = new ToolStripMenuItem("Setup &Steam");
-            setupSteamItem.Click += delegate { SetupSteam(true); };
-            contextMenu.Items.Add(setupSteamItem);
-            contextMenu.Items.Add(new ToolStripSeparator());
-
             var settingsItem = contextMenu.Items.Add("&Settings");
             settingsItem.Click += Settings_Click;
 
@@ -177,8 +160,6 @@ namespace SteamController
                 );
 #endif
             };
-
-            SetupSteam(false);
 
             context.Start();
 
@@ -244,133 +225,6 @@ namespace SteamController
             context.Stop();
             using (context) { }
         }
-
-        public void SetupSteam(bool always)
-        {
-            var blacklistedSteamController = Helpers.SteamConfiguration.IsControllerBlacklisted(
-                Devices.SteamController.VendorID,
-                Devices.SteamController.ProductID
-            );
-            var blacklistedX360Controller = Helpers.SteamConfiguration.IsControllerBlacklisted(
-                Devices.Xbox360Controller.VendorID,
-                Devices.Xbox360Controller.ProductID
-            );
-            var blacklistedDS4Controller = Helpers.SteamConfiguration.IsControllerBlacklisted(
-                Devices.DS4Controller.VendorID,
-                Devices.DS4Controller.ProductID
-            );
-
-            if (blacklistedSteamController is null || blacklistedX360Controller is null || blacklistedDS4Controller is null)
-            {
-                // Appears that Steam is not installed
-                if (always)
-                {
-                    MessageBox.Show("Steam appears not to be installed.", TitleWithVersion, MessageBoxButtons.OK);
-                }
-                return;
-            }
-
-            Application.DoEvents();
-
-            var page = new TaskDialogPage();
-            page.Caption = TitleWithVersion;
-            page.AllowCancel = true;
-
-            var useXInputController = page.RadioButtons.Add("Use &X360/DS4 Controller with Steam (preferred)");
-            useXInputController.Text += "\n- Will always use X360 or DS4 controller.";
-            useXInputController.Checked = Settings.Default.EnableSteamDetection == true &&
-                blacklistedSteamController == true &&
-                blacklistedX360Controller == false &&
-                blacklistedDS4Controller == false;
-
-            var useSteamInput = page.RadioButtons.Add("Use &Steam Input with Steam (requires configuration)");
-            useSteamInput.Text += "\n- Will try to use Steam controls.";
-            useSteamInput.Text += "\n- Does REQUIRE disabling DESKTOP MODE shortcuts in Steam.";
-            useSteamInput.Text += "\n- Click Help for more information.";
-            useSteamInput.Checked = Settings.Default.EnableSteamDetection == true &&
-                blacklistedSteamController == false &&
-                blacklistedX360Controller == true &&
-                blacklistedDS4Controller == true;
-
-            var ignoreSteam = page.RadioButtons.Add("&Ignore Steam (only if you know why you need it)");
-            ignoreSteam.Text += "\n- Will revert all previously made changes.";
-            ignoreSteam.Checked = Settings.Default.EnableSteamDetection == false;
-
-            bool valid = ignoreSteam.Checked || useXInputController.Checked || useSteamInput.Checked;
-
-            // If everything is OK, on subsequent runs nothing to configure
-            if (valid && !always)
-                return;
-
-            if (valid || Settings.Default.EnableSteamDetection == null)
-            {
-                page.Heading = "Steam Controller Setup";
-                page.Text = "To use Steam Controller with Steam you need to configure it first.";
-                page.Icon = TaskDialogIcon.ShieldBlueBar;
-            }
-            else
-            {
-                page.Heading = "Steam Controller Setup - Configuration Lost";
-                page.Text = "Configure your Steam Controller again.";
-                page.Icon = TaskDialogIcon.ShieldWarningYellowBar;
-            }
-
-            var continueButton = new TaskDialogButton("Continue") { ShowShieldIcon = true };
-
-            page.Buttons.Add(continueButton);
-            page.Buttons.Add(TaskDialogButton.Cancel);
-            page.Buttons.Add(TaskDialogButton.Help);
-
-            page.Footnote = new TaskDialogFootnote();
-            page.Footnote.Text = "This will change Steam configuration. ";
-            page.Footnote.Text += "Close Steam before confirming as otherwise Steam will be forcefully closed.";
-            page.Footnote.Icon = TaskDialogIcon.Warning;
-
-            page.HelpRequest += delegate { Dependencies.OpenLink(Dependencies.SDTURL + "/steam-controller"); };
-
-            var result = TaskDialog.ShowDialog(new Form { TopMost = true }, page, TaskDialogStartupLocation.CenterScreen);
-            if (result != continueButton)
-                return;
-
-            Helpers.SteamConfiguration.KillSteam();
-            Helpers.SteamConfiguration.WaitForSteamClose(5000);
-            Helpers.SteamConfiguration.BackupSteamConfig();
-
-            var steamControllerUpdate = Helpers.SteamConfiguration.UpdateControllerBlacklist(
-                Devices.SteamController.VendorID,
-                Devices.SteamController.ProductID,
-                useXInputController.Checked
-            );
-            var x360ControllerUpdate = Helpers.SteamConfiguration.UpdateControllerBlacklist(
-                Devices.Xbox360Controller.VendorID,
-                Devices.Xbox360Controller.ProductID,
-                useSteamInput.Checked
-            );
-            var ds4ControllerUpdate = Helpers.SteamConfiguration.UpdateControllerBlacklist(
-                Devices.DS4Controller.VendorID,
-                Devices.DS4Controller.ProductID,
-                useSteamInput.Checked
-            );
-            Settings.Default.EnableSteamDetection = useSteamInput.Checked || useXInputController.Checked;
-
-            if (steamControllerUpdate && x360ControllerUpdate && ds4ControllerUpdate)
-            {
-                notifyIcon.ShowBalloonTip(
-                    3000, TitleWithVersion,
-                    "Steam Configuration changed. You can start Steam now.",
-                    ToolTipIcon.Info
-                );
-            }
-            else
-            {
-                notifyIcon.ShowBalloonTip(
-                    3000, TitleWithVersion,
-                    "Steam Configuration was not updated. Maybe Steam is open?",
-                    ToolTipIcon.Warning
-                );
-            }
-        }
-
         private void Settings_Click(object? sender, EventArgs e)
         {
             var form = new Form()
