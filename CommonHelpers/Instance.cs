@@ -222,35 +222,6 @@ namespace CommonHelpers
 
         private static System.Timers.Timer? updateTimer;
 
-        public static void RunUpdater(string Title, bool user = false, int recheckIntervalHours = 24)
-        {
-            // Schedule updater in 24h
-            if (updateTimer == null && !user && recheckIntervalHours > 0)
-            {
-                updateTimer = new System.Timers.Timer
-                {
-                    Interval = recheckIntervalHours * 60 * 60 * 1000 // 24h
-                };
-                updateTimer.Elapsed += delegate { RunUpdater(Title, false); };
-                updateTimer.Start();
-            }
-
-            try
-            {
-                Process.Start(new ProcessStartInfo()
-                {
-                    FileName = "Updater.exe",
-                    ArgumentList = {
-                        user ? "-user" : "-first",
-                        "-app", ApplicationName,
-                        "-version", ProductVersion
-                    },
-                    UseShellExecute = false
-                });
-            }
-            catch { }
-        }
-
         public static void Fatal(String? title, String message, bool capture = true)
         {
             if (capture)
