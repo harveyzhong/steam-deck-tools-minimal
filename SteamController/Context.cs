@@ -11,7 +11,6 @@ namespace SteamController
 
         public Devices.SteamController Steam { get; private set; }
         public Devices.Xbox360Controller X360 { get; private set; }
-        public Devices.DS4Controller DS4 { get; private set; }
         public Devices.KeyboardController Keyboard { get; private set; }
         public Devices.MouseController Mouse { get; private set; }
 
@@ -26,12 +25,11 @@ namespace SteamController
             public bool GameProcessRunning { get; set; }
             public bool RTSSInForeground { get; set; }
             public bool SteamUsesX360Controller { get; set; }
-            public bool SteamUsesDS4Controller { get; set; }
             public bool SteamUsesSteamInput { get; set; }
 
             public bool IsActive
             {
-                get { return RTSSInForeground || GameProcessRunning || SteamUsesX360Controller || SteamUsesDS4Controller || SteamUsesSteamInput; }
+                get { return RTSSInForeground || GameProcessRunning || SteamUsesX360Controller || SteamUsesSteamInput; }
             }
 
             public override string ToString()
@@ -39,7 +37,6 @@ namespace SteamController
                 string reason = "state";
                 if (GameProcessRunning) reason += " game";
                 if (SteamUsesX360Controller) reason += " steamX360";
-                if (SteamUsesDS4Controller) reason += " steamDS4";
                 if (SteamUsesSteamInput) reason += " steamInput";
                 if (RTSSInForeground) reason += " rtss";
                 return reason;
@@ -81,7 +78,6 @@ namespace SteamController
         {
             Steam = new Devices.SteamController();
             X360 = new Devices.Xbox360Controller();
-            DS4 = new Devices.DS4Controller();
             Keyboard = new Devices.KeyboardController();
             Mouse = new Devices.MouseController();
 
@@ -96,7 +92,6 @@ namespace SteamController
 
             using (Steam) { }
             using (X360) { }
-            using (DS4) { }
             using (Keyboard) { }
             using (Mouse) { }
         }
@@ -104,7 +99,6 @@ namespace SteamController
         public void Tick()
         {
             X360.Tick();
-            DS4.Tick();
 
             foreach (var manager in Managers)
             {
@@ -117,7 +111,6 @@ namespace SteamController
         {
             Steam.BeforeUpdate();
             X360.BeforeUpdate();
-            DS4.BeforeUpdate();
             Keyboard.BeforeUpdate();
             Mouse.BeforeUpdate();
 
@@ -138,7 +131,6 @@ namespace SteamController
             {
                 Steam.Update();
                 X360.Update();
-                DS4.Update();
                 Keyboard.Update();
                 Mouse.Update();
             }

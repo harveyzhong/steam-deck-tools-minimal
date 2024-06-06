@@ -196,7 +196,7 @@ namespace SteamController
                 else
                     notifyIcon.Icon = Resources.monitor_off;
             }
-            else if (!context.X360.Valid || !context.DS4.Valid)
+            else if (!context.X360.Valid)
             {
                 notifyIcon.Text = TitleWithVersion + ". Missing ViGEm?";
                 notifyIcon.Icon = Resources.microsoft_xbox_controller_red;
