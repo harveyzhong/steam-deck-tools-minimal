@@ -27,10 +27,7 @@ namespace SteamController
         {
             Profiles = {
                 new Profiles.Predefined.DesktopProfile() { Name = "Desktop" },
-                new Profiles.Predefined.SteamProfile() { Name = "Steam", Visible = false },
-                new Profiles.Predefined.SteamWithShorcutsProfile() { Name = "Steam with Shortcuts", Visible = false },
                 new Profiles.Predefined.X360HapticProfile() { Name = "X360", EmulateTouchPads = true },
-                new Profiles.Predefined.DS4HapticProfile() { Name = "DS4" },
             },
             Managers = {
                 new Managers.ProcessManager(),
